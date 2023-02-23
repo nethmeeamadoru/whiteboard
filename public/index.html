@@ -1,8 +1,22 @@
+<!DOCTYPE html>
 <html>
   <head>
     <style>
       #canvas {
-        border: 1px solid black;
+        border: 2px solid rgb(53, 22, 230);
+      }
+      .note {
+        position: absolute;
+        border: 1px solid #000;
+        background-color: #fff;
+        padding: 5px;
+        width: 100px;
+        height: 100px;
+      }
+      img {
+        position: absolute;
+        max-width: 200px;
+        max-height: 200px;
       }
     </style>
   </head>
@@ -11,6 +25,8 @@
     <button id="undo-button">Undo</button>
     <button id="redo-button">Redo</button>
     <button id="erase-button">Erase</button>
+    <input type="file" id="file-upload" accept="image/*">
+    <button id="note-button">Add Note</button>
   </body>
   <script src="https://cdn.jsdelivr.net/npm/@ariutta/svg-pan-zoom@3.7.0/dist/svg-pan-zoom.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.6.0/socket.io.js"></script>
@@ -24,6 +40,8 @@
     let lastPos = { x: 0, y: 0 };
     let history = [];
     let historyIndex = 0;
+    const noteButton = document.getElementById("note-button");
+    noteButton.addEventListener("click", addNote);
 
     canvas.addEventListener("mousedown", event => {
         x = event.clientX;
@@ -78,6 +96,75 @@
         history.push(context.getImageData(0, 0, canvas.width, canvas.height));
         historyIndex = history.length - 1;
       });
+
+    const fileUpload = document.getElementById("file-upload");
+    fileUpload.addEventListener("change", event => {
+        const files = event.target.files;
+        const file = files[0];
+
+        const reader = new FileReader();
+        reader.addEventListener("load", () => {
+            addImage(reader.result);
+            socket.emit("image", reader.result);
+        });
+
+        if (file) {
+            reader.readAsDataURL(file);
+        }
+    });
+
+    socket.on("image", image => {
+        addImage(image);
+    });
+
+    function addImage(imageData) {
+        const img = document.createElement("img");
+        img.src = imageData;
+        img.addEventListener("mousedown", dragStart);
+        img.addEventListener("mouseup", dragEnd);
+        img.addEventListener("mousemove", drag);
+        document.body.appendChild(img);
+    }
+
+    function dragStart(event) {
+        this.dragging = true;
+        this.offsetX = event.clientX - this.offsetLeft;
+        this.offsetY = event.clientY - this.offsetTop;
+    }
+
+    function dragEnd() {
+        this.dragging = false;
+    }
+
+    function drag(event) {
+        if (this.dragging) {
+            this.style.left = event.clientX - this.offsetX + "px";
+            this.style.top = event.clientY - this.offsetY + "px";
+        }
+    }
+
+    function addNote() {
+        const note = document.createElement("div");
+        note.classList.add("note");
+        note.style.left = Math.random() * 400 + "px";
+        note.style.top = Math.random() * 400 + "px";
+        note.contentEditable = "true";
+        note.addEventListener("input", () => {
+          socket.emit("addNote", note.innerHTML, note.style.left, note.style.top);
+        });
+
+      document.body.appendChild(note);
+      }
+
+    socket.on("addNote", (html, left, top) => {
+        const note = document.createElement("div");
+        note.classList.add("note");
+        note.innerHTML = html;
+        note.style.left = left;
+        note.style.top = top;
+
+      document.body.appendChild(note);
+    });
 
     function draw(start, end) {
       context.beginPath();
