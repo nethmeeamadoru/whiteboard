@@ -9,5 +9,7 @@ Content-Type: application/json
   "password": "user1pass"
 }
 
+#second user alex1 : passForAlex
+
 ### Get users
 GET http://localhost:3003/api/users

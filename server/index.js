@@ -1,32 +1,25 @@
-/*const app = require('./app')
 const http = require('http')
+const { WebSocket, WebSocketServer } = require('ws')
+const uuidv4 = require('uuid').v4
+
+const app = require('./app')
 const config = require('./utils/config')
 const logger = require('./utils/logger')
 
-const server = http.createServer(app)
-
-server.listen(config.PORT, () => {
-  logger.info(`Server running on port ${config.PORT}`)
-})*/
-
-
-
-
-
-// Test for websocket without user functionality and restapi
-
-const config = require('./utils/config')
-
-const { WebSocket, WebSocketServer } = require('ws')
-const http = require('http')
-const uuidv4 = require('uuid').v4
-
-// Spinning the http server and the WebSocket server.
-const server = http.createServer()
-const wsServer = new WebSocketServer({ server })
-server.listen(config.PORT, () => {
-  console.log(`WebSocket server is running on port ${config.PORT}`)
+// Spinning up the http restapi server.
+const serverRest = http.createServer(app)
+serverRest.listen(config.PORT_REST, () => {
+  logger.info(`Http restapi server running on port ${config.PORT_REST}`)
 })
+
+// Spinning up the WebSocket server.
+const serverWSocket = http.createServer()
+const wsServer = new WebSocketServer({ server: serverWSocket })
+serverWSocket.listen(config.PORT_WEBSOCKET, () => {
+  console.log(`WebSocket server is running on port ${config.PORT_WEBSOCKET}`)
+})
+
+//Websocket example stuff:
 
 // I'm maintaining all active connections in this object
 const clients = {}
