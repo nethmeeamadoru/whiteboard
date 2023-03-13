@@ -132,10 +132,17 @@ const handleFileChange = (event) => {
     const img = new Image();
     img.onload = () => {
       const canvas = canvasRef.current;
-      canvas.width = img.width * 0.1;
-      canvas.height = img.height * 0.1;
+      const canvasWidth = 1000;
+      const canvasHeight = 500; 
+      canvas.width = canvasWidth;
+      canvas.height = canvasHeight;
+
+      const scale = Math.min(canvasWidth / img.width, canvasHeight / img.height);
+      const x = (canvasWidth / 2) - (img.width / 2) * scale;
+      const y = (canvasHeight / 2) - (img.height / 2) * scale;
+
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
     };
     img.src = e.target.result;
   };
@@ -146,7 +153,14 @@ const handleFileChange = (event) => {
 const canvasStyle = {
   width: '1000px',
   height: '500px',
-  border: '3px solid black'
+  border: '3px solid black',
+  padding: '10px',
+  position: 'absolute',
+  top: 0,
+  bottom: 0,
+  left: 0,
+  right: 0,
+  margin: 'auto',
 };
 
 const saveAsPNG = () => {
@@ -158,21 +172,21 @@ const saveAsPNG = () => {
 };
 
 return (
-<div>
-<canvas
-     ref={canvasRef}
-     style={canvasStyle}
-     onMouseDown={handleMouseDown}
-     onMouseMove={handleMouseMove}
-     onMouseUp={handleMouseUp}
-   />
-<button onClick={handleUndo}>Undo</button>
-<button onClick={handleRedo}>Redo</button>
-<button onClick={handleClear}>Clear</button>
-<button onClick={saveAsPNG}>Save</button>
-<input type="file" accept="image/*" onChange={handleFileChange} />
-</div>
-);
+  <div>
+    <canvas
+         ref={canvasRef}
+         style={canvasStyle}
+         onMouseDown={handleMouseDown}
+         onMouseMove={handleMouseMove}
+         onMouseUp={handleMouseUp}
+       />
+      <button onClick={handleUndo}>Undo</button>
+      <button onClick={handleRedo}>Redo</button>
+      <button onClick={handleClear}>Clear</button>
+      <button onClick={saveAsPNG}>Save</button>
+      <input type="file" accept="image/*" onChange={handleFileChange} />
+    </div>
+  );
 };
 
 export default Whiteboard;
