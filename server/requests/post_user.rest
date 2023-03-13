@@ -1,0 +1,15 @@
+#Uses vscode "REST Client" extension.
+### Creating a user 1st try returns 201 and 2nd try returns 400
+POST http://localhost:3003/api/users
+Content-Type: application/json
+
+{
+  "username": "user1",
+  "name": "User1",
+  "password": "user1pass"
+}
+
+#second user alex1 : passForAlex
+
+### Get users
+GET http://localhost:3003/api/users
