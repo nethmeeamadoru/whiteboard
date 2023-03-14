@@ -12,7 +12,7 @@ const typesDef = {
   REJECT_JOIN_TO_ROOM: 'rejectjointoroom',
   USER_LEFTH: 'userleft',
   OWNER_LEFT: 'ownerleft',
-  WHITEBOARD_EVENT: 'whiteboardevent',
+  WHITEBOARD_DRAW: 'DRAW',
 }
 
 const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
@@ -49,14 +49,16 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     ws.onopen = () => {
       console.log("WebSocket connection established");
       // Need to send username to server.
-      if (user.username && websocket) {
+      if (user.username) {
         if (whiteboardSessionID === 'newSession') {
-          websocket.send(JSON.stringify({
+          console.log('New ws with newSession.')
+          ws.send(JSON.stringify({
             username: user.username,
             type: typesDef.CREATE_NEW_ROOM,
           }))
         } else {
-          websocket.send(JSON.stringify({
+          console.log('New ws with join session.')
+          ws.send(JSON.stringify({
             username: user.username,
             roomId: whiteboardSessionID,
             type: typesDef.ASK_TO_JOIN_ROOM,
@@ -66,37 +68,50 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     };
 
     ws.onmessage = (event) => {
+      console.log('ws.onmessage')
       const data = JSON.parse(event.data);
-      if (data.type === typesDef.WHITEBOARD_EVENT) {
+      if (data.type === typesDef.WHITEBOARD_DRAW) {
+        console.log('WHITEBOARD_DRAW')
         draw(ctx, data);
       }
       else if (data.type === typesDef.CREATE_NEW_ROOM) {
+        console.log('CREATE_NEW_ROOM')
         newRoomCreated(ctx, data)
       }
       else if (data.type === typesDef.ASK_TO_JOIN_ROOM) {
         // This asks from room owner if user x can be added
+        console.log('ASK_TO_JOIN_ROOM')
         askIfUserCanJoin(ctx, data)
       }
       else if (data.type === typesDef.ADD_USER_TO_ROOM) {
         // This is notification that user was added
+        console.log('ADD_USER_TO_ROOM')
         userJoined(ctx, data)
       }
       else if (data.type === typesDef.REJECT_JOIN_TO_ROOM) {
+        console.log('REJECT_JOIN_TO_ROOM')
         userRejected(ctx, data)
       }
       else if (data.type === typesDef.USER_LEFTH) {
+        console.log('USER_LEFTH')
         userLeft(ctx, data)
       }
       else if (data.type === typesDef.OWNER_LEFT) {
+        console.log('OWNER_LEFT')
         ownerLeft(ctx, data)
+      }
+      else {
+        console.log('Unknown ws type:')
+        console.log(event)
       }
     };
 
     return () => {
+      console.log('Closing ws')
       ws.close();
     };
 
-  }, [user]);
+  }, []);
 
   if (!user) {
     return null
@@ -117,7 +132,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
 
   const newRoomCreated = (ctx, data) => {
     const roomId = data.roomId
-    setWhiteBoardSessionId(roomId)
+    //setWhiteBoardSessionId(roomId)
     dispatch(
       setNotification(
         {

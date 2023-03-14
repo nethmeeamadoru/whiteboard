@@ -53,7 +53,7 @@ const typesDef = {
   REJECT_JOIN_TO_ROOM: 'rejectjointoroom',
   USER_LEFTH: 'userleft',
   OWNER_LEFT: 'ownerleft',
-  WHITEBOARD_EVENT: 'whiteboardevent',
+  WHITEBOARD_DRAW: 'DRAW',
 }
 
 function broadcastMessageToRoom(json, roomId) {
@@ -126,7 +126,7 @@ function handleMessage(message, userId) {
       console.log('Error: Only room owner can add other users.')
     }
   }
-  else if (dataFromClient.type === typesDef.WHITEBOARD_EVENT) {
+  else if (dataFromClient.type === typesDef.WHITEBOARD_DRAW) {
     console.log('Whiteboard event.')
     const roomId = userToRoom[userId]
     const whiteboardEventContent = dataFromClient.content
@@ -136,7 +136,7 @@ function handleMessage(message, userId) {
   else {
     console.log('Unknown event')
     console.log(userId)
-    console.log(message)
+    console.log(dataFromClient)
   }
 }
 
