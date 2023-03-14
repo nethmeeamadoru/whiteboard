@@ -59,8 +59,9 @@ const typesDef = {
 function broadcastMessageToRoom(json, roomId) {
   // We are sending the current data to all connected clients in the room
   const data = JSON.stringify(json)
-  for (let userId in roomToUsers[roomId]) {
-    let client = userToClients[userId]
+  console.log('broadcastMessageToRoom')
+  for (const userId of roomToUsers[roomId]) {
+    const client = userToClients[userId]
     if (client.readyState === WebSocket.OPEN) {
       client.send(data)
     }
@@ -131,6 +132,11 @@ function handleMessage(message, userId) {
     const whiteboardEventContent = dataFromClient.content
     json.data = { eventContent: whiteboardEventContent }
     broadcastMessageToRoom(json, roomId)
+  }
+  else {
+    console.log('Unknown event')
+    console.log(userId)
+    console.log(message)
   }
 }
 
