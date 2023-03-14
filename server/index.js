@@ -128,10 +128,11 @@ function handleMessage(message, userId) {
   }
   else if (dataFromClient.type === typesDef.WHITEBOARD_DRAW) {
     console.log('Whiteboard event.')
+    //console.log(dataFromClient)
     const roomId = userToRoom[userId]
-    const whiteboardEventContent = dataFromClient.content
-    json.data = { eventContent: whiteboardEventContent }
-    broadcastMessageToRoom(json, roomId)
+    //const whiteboardEventContent = dataFromClient.content
+    //json.data = { eventContent: whiteboardEventContent }
+    broadcastMessageToRoom(dataFromClient, roomId)
   }
   else {
     console.log('Unknown event')

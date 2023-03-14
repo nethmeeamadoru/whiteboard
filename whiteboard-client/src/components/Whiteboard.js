@@ -17,7 +17,7 @@ const typesDef = {
 
 const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   const canvasRef = useRef();
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawings, setDrawings] = useState([]);
   const [currentDrawing, setCurrentDrawing] = useState({
@@ -28,6 +28,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   });
   const [websocket, setWebsocket] = useState(null);
   const [redoDrawings, setRedoDrawings] = useState([]);
+  
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -76,29 +77,29 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       }
       else if (data.type === typesDef.CREATE_NEW_ROOM) {
         console.log('CREATE_NEW_ROOM')
-        newRoomCreated(ctx, data)
+        newRoomCreated(ctx, data, ws)
       }
       else if (data.type === typesDef.ASK_TO_JOIN_ROOM) {
         // This asks from room owner if user x can be added
         console.log('ASK_TO_JOIN_ROOM')
-        askIfUserCanJoin(ctx, data)
+        askIfUserCanJoin(ctx, data, ws)
       }
       else if (data.type === typesDef.ADD_USER_TO_ROOM) {
         // This is notification that user was added
         console.log('ADD_USER_TO_ROOM')
-        userJoined(ctx, data)
+        userJoined(ctx, data, ws)
       }
       else if (data.type === typesDef.REJECT_JOIN_TO_ROOM) {
         console.log('REJECT_JOIN_TO_ROOM')
-        userRejected(ctx, data)
+        userRejected(ctx, data, ws)
       }
       else if (data.type === typesDef.USER_LEFTH) {
         console.log('USER_LEFTH')
-        userLeft(ctx, data)
+        userLeft(ctx, data, ws)
       }
       else if (data.type === typesDef.OWNER_LEFT) {
         console.log('OWNER_LEFT')
-        ownerLeft(ctx, data)
+        ownerLeft(ctx, data, ws)
       }
       else {
         console.log('Unknown ws type:')
@@ -118,6 +119,8 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   }
 
   const draw = (ctx, drawing) => {
+    console.log('draw')
+    console.log(drawing)
     ctx.strokeStyle = drawing.color;
     ctx.lineWidth = drawing.size;
     ctx.lineJoin = "round";
@@ -130,8 +133,10 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     ctx.stroke();
   };
 
-  const newRoomCreated = (ctx, data) => {
-    const roomId = data.roomId
+  const newRoomCreated = (ctx, data, ws) => {
+    const roomId = data.data.roomId
+    console.log(`RoomId ${roomId}`)
+    console.log(ws)
     //setWhiteBoardSessionId(roomId)
     dispatch(
       setNotification(
@@ -144,42 +149,42 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     )
   }
 
-  const newUserToJoinAccept = (userId) => {
-    websocket.send(JSON.stringify({
+  const newUserToJoinAccept = (userId, ws) => {
+    ws.send(JSON.stringify({
       type: typesDef.ADD_USER_TO_ROOM,
       userId: userId
     }))
   }
 
-  const newUserToJoinReject = (userId) => {
-    websocket.send(JSON.stringify({
+  const newUserToJoinReject = (userId, ws) => {
+    ws.send(JSON.stringify({
       type: typesDef.REJECT_JOIN_TO_ROOM,
       userId: userId
     }))
   }
 
-  const askIfUserCanJoin = (ctx, data) => {
-    const userId = data.userId
-    const username = data.username
+  const askIfUserCanJoin = (ctx, data, ws) => {
+    const userId = data.data.userId
+    const username = data.data.username
     confirmAlert({
       title: `Add user`,
       message: `Do you want to add user ${username}?`,
       buttons: [
         {
           label: 'Yes',
-          onClick: () => newUserToJoinAccept(userId)
+          onClick: () => newUserToJoinAccept(userId, ws)
         },
         {
           label: 'No',
-          onClick: () => newUserToJoinReject(userId)
+          onClick: () => newUserToJoinReject(userId, ws)
         }
       ]
     })
 
   }
 
-  const userJoined = (ctx, data) => {
-    const username = data.username
+  const userJoined = (ctx, data, ws) => {
+    const username = data.data.username
     console.log(`User ${username} joined.`)
     dispatch(
       setNotification(
@@ -191,7 +196,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       )
     )
   }
-  const userRejected = (ctx, data) => {
+  const userRejected = (ctx, data, ws) => {
     // TODO: use popup and reroute back to CreateOrJoinWhiteboard.
     console.log('Request to join was rejected, or room does not exist.')
     dispatch(
@@ -205,8 +210,8 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     )
     setWhiteBoardSessionId(null)
   }
-  const userLeft = (ctx, data) => {
-    const username = data.username
+  const userLeft = (ctx, data, ws) => {
+    const username = data.data.username
     console.log(`User ${username} left.`)
     dispatch(
       setNotification(
@@ -218,8 +223,8 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       )
     )
   }
-  const ownerLeft = (ctx, data) => {
-    const username = data.username
+  const ownerLeft = (ctx, data, ws) => {
+    const username = data.data.username
     console.log(`Owner ${username} left.`)
     // TODO: use info popup with two buttons (save, exit) and after reroute to CreateOrJoinWhiteboard.
     dispatch(
@@ -251,7 +256,10 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       points: [...prevState.points, newPoint],
     }));
     draw(canvasRef.current.getContext("2d"), currentDrawing);
-    websocket.send(JSON.stringify(currentDrawing));
+    const d = JSON.stringify(currentDrawing)
+    console.log('send draw to ws')
+    console.log(d)
+    websocket.send(d);
   };
 
   const handleMouseUp = () => {
