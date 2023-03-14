@@ -141,13 +141,15 @@ function handleMessage(message, userId) {
 }
 
 function handleDisconnect(userId) {
+  console.log(`handleDisconnect ${userId}`)
   const roomId = userToRoom[userId]
   const username = userIdToUsername[userId] || userId
 
-  // Roomowner has not left already thus can be normally handled.
   if (roomId in roomToUsers) {
     // Room owner left -> room must be destroyd
-    if (userId === roomToUsers[userId][0]) {
+    console.log('Room exist')
+    console.log(roomToUsers[roomId])
+    if (userId === roomToUsers[roomId][0]) {
       console.log(`Roomowner user ${userId} left ending room.`)
       const json = { type: typesDef.OWNER_LEFT }
 
