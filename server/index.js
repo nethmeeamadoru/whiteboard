@@ -60,6 +60,8 @@ function broadcastMessageToRoom(json, roomId) {
   // We are sending the current data to all connected clients in the room
   const data = JSON.stringify(json)
   console.log('broadcastMessageToRoom')
+  console.log(roomId)
+  console.log(roomToUsers[roomId])
   for (const userId of roomToUsers[roomId]) {
     const client = userToClients[userId]
     if (client.readyState === WebSocket.OPEN) {
@@ -119,6 +121,7 @@ function handleMessage(message, userId) {
     if (userId === roomToUsers[roomId][0]) {
       console.log(`Adding user ${userIdToJoin} to room ${roomId}`)
       roomToUsers[roomId].push(userIdToJoin)
+      userToRoom[userIdToJoin] = roomId
       json.data = { username: userIdToUsername[userIdToJoin] }
       broadcastMessageToRoom(json, roomId)
       // Do we need to send all roomContent here to new user?
