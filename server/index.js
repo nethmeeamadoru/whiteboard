@@ -116,7 +116,7 @@ function handleMessage(message, userId) {
     const roomId = userToRoom[userId]
     const userIdToJoin = dataFromClient.userId
     // Only room owner can add other users
-    if (userId === roomToUsers[userId][0]) {
+    if (userId === roomToUsers[roomId][0]) {
       console.log(`Adding user ${userIdToJoin} to room ${roomId}`)
       roomToUsers[roomId].push(userIdToJoin)
       json.data = { username: userIdToUsername[userIdToJoin] }
