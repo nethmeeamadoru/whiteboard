@@ -19,19 +19,7 @@ serverWSocket.listen(config.PORT_WEBSOCKET, () => {
   console.log(`WebSocket server is running on port ${config.PORT_WEBSOCKET}`)
 })
 
-
-
-
-// I'm maintaining all active users in this object
-//const users = {}
-// The current editor content is maintained here.
-//let editorContent = null
-// User activity history in room.
-//let roomUserActivity = {}
-
-
-
-
+// Websoceket related events:
 
 // Dict where key is userId and value is websocket connection.
 const userToClients = {}
@@ -44,6 +32,9 @@ const userIdToUsername = {}
 
 // Dict where key is userId and value is RoomId (user can belong to 0 or 1 room).
 const userToRoom = {}
+
+// Dict where key is roomId and value is Array of drawing related events
+const roomToEvents = {}
 
 // Event types
 const typesDef = {
@@ -79,6 +70,15 @@ function broadcastMessageToUser(json, userId) {
   }
 }
 
+function broadcastMessageToUserAlreadyJsonFormatted(json, userId) {
+  // We are sending the current data to specific client in
+  const data = JSON.stringify(json)
+  let client = userToClients[userId]
+  if (client.readyState === WebSocket.OPEN) {
+    client.send(data)
+  }
+}
+
 function handleMessage(message, userId) {
   const dataFromClient = JSON.parse(message.toString())
   const json = { type: dataFromClient.type }
@@ -88,6 +88,7 @@ function handleMessage(message, userId) {
     roomToUsers[roomId] = [userId]
     userToRoom[userId] = roomId
     userIdToUsername[userId] = dataFromClient.username
+    roomToEvents[roomId] = []
     //roomUserActivity[roomId] = [`${dataFromClient.username} created the whiteboard`]
     json.data = { roomId: roomId }
     broadcastMessageToRoom(json, roomId)
@@ -124,17 +125,22 @@ function handleMessage(message, userId) {
       userToRoom[userIdToJoin] = roomId
       json.data = { username: userIdToUsername[userIdToJoin] }
       broadcastMessageToRoom(json, roomId)
-      // Do we need to send all roomContent here to new user?
+
+      // Send all preexisting draw data to just joined user.
+      for (const jsonEvent of roomToEvents[roomId]) {
+        broadcastMessageToUserAlreadyJsonFormatted(jsonEvent, userIdToJoin)
+      }
     } else {
       console.log('Error: Only room owner can add other users.')
     }
   }
   else if (dataFromClient.type === typesDef.WHITEBOARD_DRAW) {
     console.log('Whiteboard event.')
-    //console.log(dataFromClient)
     const roomId = userToRoom[userId]
-    //const whiteboardEventContent = dataFromClient.content
-    //json.data = { eventContent: whiteboardEventContent }
+
+    // Store events as they arrive to roomspecific array
+    roomToEvents[roomId].push(dataFromClient)
+
     broadcastMessageToRoom(dataFromClient, roomId)
   }
   else {
