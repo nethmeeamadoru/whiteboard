@@ -115,7 +115,7 @@ const Whiteboard = () => {
         // Send the image data to the server
         const data = canvas.toDataURL("image/png");
         websocket.send(JSON.stringify({
-          type: "image",
+          type: "PICTURE",
           data: data
       }));
       };
