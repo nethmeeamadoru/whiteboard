@@ -1,25 +1,62 @@
-import logo from './logo.svg';
-import './App.css';
+import React, { useState, useEffect } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { Routes, Route } from 'react-router-dom'
+import { Container } from '@mui/material'
 
-function App() {
+import Whiteboard from './components/Whiteboard'
+import Menu from './components/Menu'
+import Notification from './components/Notification'
+import LoginForm from './components/LoginForm'
+import CreateOrJoinWhiteboard from './components/CreateOrJoinWhiteboard'
+
+import { initAuth } from './reducers/authReducer'
+
+const App = () => {
+  const [whiteboardSessionID, setWhiteBoardSessionId] = useState(null)
+  const dispatch = useDispatch()
+
+  useEffect(() => {
+    dispatch(initAuth())
+  }, [dispatch])
+
+  const user = useSelector((state) => state.user)
+
+  if (user === null) {
+    return (
+      <Container>
+        <Notification />
+        <LoginForm />
+      </Container>
+    )
+  }
+
+  if (!whiteboardSessionID) {
+    return (
+      <Container>
+        <Menu />
+        <Notification />
+        <CreateOrJoinWhiteboard
+          user={user}
+          setWhiteBoardSessionId={setWhiteBoardSessionId}
+        />
+      </Container>
+    )
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <Container>
+      <Menu />
+      <Notification />
+      <Routes>
+        <Route
+          path='/'
+          element={
+            <Whiteboard user={user} whiteboardSessionID={whiteboardSessionID} setWhiteBoardSessionId={setWhiteBoardSessionId} />
+          }
+        />
+      </Routes>
+    </Container>
+  )
 }
 
-export default App;
+export default App
