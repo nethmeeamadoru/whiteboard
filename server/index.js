@@ -63,6 +63,7 @@ function broadcastMessageToRoom(json, roomId) {
 
 function broadcastMessageToUser(json, userId) {
   // We are sending the current data to specific client in
+  console.log('broadcastMessageToUser')
   const data = JSON.stringify(json)
   let client = userToClients[userId]
   if (client.readyState === WebSocket.OPEN) {
@@ -159,19 +160,19 @@ function handleDisconnect(userId) {
   const roomId = userToRoom[userId]
   const username = userIdToUsername[userId] || userId
 
-  if (roomId in roomToUsers) {
+  if (roomId && roomId in roomToUsers) {
     // Room owner left -> room must be destroyd
-    console.log('Room exist')
     console.log(roomToUsers[roomId])
     if (userId === roomToUsers[roomId][0]) {
-      console.log(`Roomowner user ${userId} left ending room.`)
+      console.log(`Roomowner ${userId} left ending room.`)
       const json = { type: typesDef.OWNER_LEFT }
 
-      //roomUserActivity[roomId].push(`${username} left the whiteboard`)
       json.data = { username }
 
       delete userToClients[userId]
 
+      // Delete only roomowner so that we can still infor other room users
+      // of this event and delete room after informing them
       const indexToRemove = roomToUsers[roomId].indexOf(userId)
       if (indexToRemove > -1) {
         roomToUsers[roomId].splice(indexToRemove, 1)
@@ -183,15 +184,28 @@ function handleDisconnect(userId) {
 
       broadcastMessageToRoom(json, roomId)
 
+      // What to do with other room members:
+      // 1. Terminate their connection as well
+      // 2. Remove roomid mappings to their userId
+      // 3. Do nothing to them
+
+      for (const userIdToDelete of roomToUsers[roomId]) {
+        //delete userToClients[userIdToDelete]
+        delete userIdToUsername[userIdToDelete]
+        delete userToRoom[userIdToDelete]
+      }
+
       // Delete room
       delete roomToUsers[roomId]
+
+      // Delete room cache
+      delete roomToEvents[roomId]
     }
     // Non roomowner left, remove that user.
     else {
       console.log(`Normal user ${userId} disconnected.`)
       const json = { type: typesDef.USER_LEFTH }
 
-      //roomUserActivity[roomId].push(`${username} left the whiteboard`)
       json.data = { username }
 
       delete userToClients[userId]
@@ -202,7 +216,6 @@ function handleDisconnect(userId) {
       }
 
       delete userIdToUsername[userId]
-
       delete userToRoom[userId]
 
       broadcastMessageToRoom(json, roomId)
