@@ -1,6 +1,6 @@
 # Whiteboard website with sockets
 
-## Contents
+## Contents OLD
 
 * Node.js server (for testing)
 - https://nodejs.org/en/
@@ -12,7 +12,8 @@
 * server
   - reguires following from ./server/.env file:
     - MONGODB_URI=mongodb+srv://{username}:{password}@whiteboard23.sqoywa8.mongodb.net/whiteboard?retryWrites=true&w=majority
-    - PORT=3003
+    - PORT_REST=3003
+    - PORT_WEBSOCKET=8000
     - JWT_SECRET=
   - npm run dev
 * client
@@ -27,5 +28,6 @@
 * Disable logging in server when in prod
   * Or atleast modify logging so not all user info is logged (passwords!!!)
 * Get .env values for production
+* Make sure websocket is encrypted/tcp
 * Make doker image of this
 * Deploy produced image
