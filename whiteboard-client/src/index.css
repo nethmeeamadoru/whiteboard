@@ -12,7 +12,8 @@ code {
     monospace;
 }
 
-canvas {
-  width: 500px;
-  height: 500px;
+body {
+  background-image: url(./images/DSC08154.jpg);
+  background-repeat: no-repeat;
+  background-size: cover;
 }
