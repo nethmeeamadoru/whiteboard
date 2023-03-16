@@ -43,7 +43,10 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     const ctx = canvas.getContext("2d");
     ctx.fillStyle = "white";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    ctx.lineJoin = 'round';
+    ctx.lineCap = 'round';
+    setContext(ctx); // This must be after the fillStyle and fillRect
+    
     const ws = createWebSocket();
     setWebsocket(ws);
 
