@@ -51,7 +51,11 @@ const App = () => {
         <Route
           path='/'
           element={
-            <Whiteboard user={user} whiteboardSessionID={whiteboardSessionID} setWhiteBoardSessionId={setWhiteBoardSessionId} />
+            <Whiteboard
+              user={user}
+              whiteboardSessionID={whiteboardSessionID}
+              setWhiteBoardSessionId={setWhiteBoardSessionId}
+            />
           }
         />
       </Routes>

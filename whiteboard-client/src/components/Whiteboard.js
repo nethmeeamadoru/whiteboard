@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from 'react'
 import { useDispatch } from 'react-redux'
-import { confirmAlert } from 'react-confirm-alert';
+import { confirmAlert } from 'react-confirm-alert'
+import 'react-confirm-alert/src/react-confirm-alert.css'
 
 import { setNotification } from '../reducers/notificationReducer'
-import { createWebSocket } from "../websocket";
+import { createWebSocket } from '../websocket'
 
 const typesDef = {
   CREATE_NEW_ROOM: 'createnewroom',
@@ -16,103 +17,97 @@ const typesDef = {
 }
 
 const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
-  const canvasRef = useRef();
-  const dispatch = useDispatch();
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [drawings, setDrawings] = useState([]);
+  const canvasRef = useRef()
+  const dispatch = useDispatch()
+  const [isDrawing, setIsDrawing] = useState(false)
+  const [drawings, setDrawings] = useState([])
   const [currentDrawing, setCurrentDrawing] = useState({
-    type: "DRAW",
-    color: "black",
+    type: typesDef.WHITEBOARD_DRAW,
+    color: 'black',
     size: 4,
     points: [],
-  });
-  const [websocket, setWebsocket] = useState(null);
-  const [redoDrawings, setRedoDrawings] = useState([]);
-  
+  })
+  const [websocket, setWebsocket] = useState(null)
+  const [redoDrawings, setRedoDrawings] = useState([])
 
   useEffect(() => {
-    const canvas = canvasRef.current;
-  
+    const canvas = canvasRef.current
+
     const resizeCanvas = () => {
-      canvas.width = canvas.clientWidth;
+      canvas.width = canvas.clientWidth
       canvas.height = canvas.clientHeight
-
     }
-    resizeCanvas();
+    resizeCanvas()
 
-    const ctx = canvas.getContext("2d");
-    ctx.fillStyle = "white";
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    const ctx = canvas.getContext('2d')
+    ctx.fillStyle = 'white'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    const ws = createWebSocket();
-    setWebsocket(ws);
+    const ws = createWebSocket()
+    setWebsocket(ws)
 
     ws.onopen = () => {
-      console.log("WebSocket connection established");
+      console.log('WebSocket connection established')
       // Need to send username to server.
       if (user.username) {
         if (whiteboardSessionID === 'newSession') {
           console.log('New ws with newSession.')
-          ws.send(JSON.stringify({
-            username: user.username,
-            type: typesDef.CREATE_NEW_ROOM,
-          }))
+          ws.send(
+            JSON.stringify({
+              username: user.username,
+              type: typesDef.CREATE_NEW_ROOM,
+            })
+          )
         } else {
           console.log('New ws with join session.')
-          ws.send(JSON.stringify({
-            username: user.username,
-            roomId: whiteboardSessionID,
-            type: typesDef.ASK_TO_JOIN_ROOM,
-          }))
+          ws.send(
+            JSON.stringify({
+              username: user.username,
+              roomId: whiteboardSessionID,
+              type: typesDef.ASK_TO_JOIN_ROOM,
+            })
+          )
         }
       }
-    };
+    }
 
     ws.onmessage = (event) => {
       console.log('ws.onmessage')
-      const data = JSON.parse(event.data);
+      const data = JSON.parse(event.data)
       if (data.type === typesDef.WHITEBOARD_DRAW) {
         console.log('WHITEBOARD_DRAW')
-        draw(ctx, data);
-      }
-      else if (data.type === typesDef.CREATE_NEW_ROOM) {
+        draw(ctx, data)
+      } else if (data.type === typesDef.CREATE_NEW_ROOM) {
         console.log('CREATE_NEW_ROOM')
-        newRoomCreated(ctx, data, ws)
-      }
-      else if (data.type === typesDef.ASK_TO_JOIN_ROOM) {
+        newRoomCreated(data, ws)
+      } else if (data.type === typesDef.ASK_TO_JOIN_ROOM) {
         // This asks from room owner if user x can be added
         console.log('ASK_TO_JOIN_ROOM')
         askIfUserCanJoin(ctx, data, ws)
-      }
-      else if (data.type === typesDef.ADD_USER_TO_ROOM) {
+      } else if (data.type === typesDef.ADD_USER_TO_ROOM) {
         // This is notification that user was added
         console.log('ADD_USER_TO_ROOM')
-        userJoined(ctx, data, ws)
-      }
-      else if (data.type === typesDef.REJECT_JOIN_TO_ROOM) {
+        userJoined(data)
+      } else if (data.type === typesDef.REJECT_JOIN_TO_ROOM) {
         console.log('REJECT_JOIN_TO_ROOM')
-        userRejected(ctx, data, ws)
-      }
-      else if (data.type === typesDef.USER_LEFTH) {
+        userRejected()
+      } else if (data.type === typesDef.USER_LEFTH) {
         console.log('USER_LEFTH')
-        userLeft(ctx, data, ws)
-      }
-      else if (data.type === typesDef.OWNER_LEFT) {
+        userLeft(data)
+      } else if (data.type === typesDef.OWNER_LEFT) {
         console.log('OWNER_LEFT')
-        ownerLeft(ctx, data, ws)
-      }
-      else {
+        ownerLeft(data)
+      } else {
         console.log('Unknown ws type:')
         console.log(event)
       }
-    };
+    }
 
     return () => {
       console.log('Closing ws')
-      ws.close();
-    };
-
-  }, []);
+      ws.close()
+    }
+  }, [])
 
   if (!user) {
     return null
@@ -121,19 +116,19 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   const draw = (ctx, drawing) => {
     console.log('draw')
     console.log(drawing)
-    ctx.strokeStyle = drawing.color;
-    ctx.lineWidth = drawing.size;
-    ctx.lineJoin = "round";
-    ctx.lineCap = "round";
-    ctx.beginPath();
-    ctx.moveTo(drawing.points[0].x, drawing.points[0].y);
+    ctx.strokeStyle = drawing.color
+    ctx.lineWidth = drawing.size
+    ctx.lineJoin = 'round'
+    ctx.lineCap = 'round'
+    ctx.beginPath()
+    ctx.moveTo(drawing.points[0].x, drawing.points[0].y)
     for (let i = 1; i < drawing.points.length; i++) {
-      ctx.lineTo(drawing.points[i].x, drawing.points[i].y);
+      ctx.lineTo(drawing.points[i].x, drawing.points[i].y)
     }
-    ctx.stroke();
-  };
+    ctx.stroke()
+  }
 
-  const newRoomCreated = (ctx, data, ws) => {
+  const newRoomCreated = (data, ws) => {
     const roomId = data.data.roomId
     console.log(`RoomId ${roomId}`)
     console.log(ws)
@@ -150,40 +145,45 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   }
 
   const newUserToJoinAccept = (userId, ws) => {
-    ws.send(JSON.stringify({
-      type: typesDef.ADD_USER_TO_ROOM,
-      userId: userId
-    }))
+    ws.send(
+      JSON.stringify({
+        type: typesDef.ADD_USER_TO_ROOM,
+        userId: userId,
+      })
+    )
   }
 
   const newUserToJoinReject = (userId, ws) => {
-    ws.send(JSON.stringify({
-      type: typesDef.REJECT_JOIN_TO_ROOM,
-      userId: userId
-    }))
+    ws.send(
+      JSON.stringify({
+        type: typesDef.REJECT_JOIN_TO_ROOM,
+        userId: userId,
+      })
+    )
   }
 
-  const askIfUserCanJoin = (ctx, data, ws) => {
+  const askIfUserCanJoin = (data, ws) => {
     const userId = data.data.userId
     const username = data.data.username
     confirmAlert({
-      title: `Add user`,
+      title: 'Add user',
       message: `Do you want to add user ${username}?`,
       buttons: [
         {
           label: 'Yes',
-          onClick: () => newUserToJoinAccept(userId, ws)
+          onClick: () => newUserToJoinAccept(userId, ws),
         },
         {
           label: 'No',
-          onClick: () => newUserToJoinReject(userId, ws)
-        }
-      ]
+          onClick: () => newUserToJoinReject(userId, ws),
+        },
+      ],
+      closeOnEscape: false,
+      closeOnClickOutside: false,
     })
-
   }
 
-  const userJoined = (ctx, data, ws) => {
+  const userJoined = (data) => {
     const username = data.data.username
     console.log(`User ${username} joined.`)
     dispatch(
@@ -196,13 +196,12 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       )
     )
   }
-  const userRejected = (ctx, data, ws) => {
-    // TODO: use popup and reroute back to CreateOrJoinWhiteboard.
+  const userRejected = () => {
     console.log('Request to join was rejected, or room does not exist.')
     dispatch(
       setNotification(
         {
-          message: `Request to join was rejected, or room does not exist.`,
+          message: 'Request to join was rejected, or room does not exist.',
           severity: 'error',
         },
         5
@@ -210,7 +209,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     )
     setWhiteBoardSessionId(null)
   }
-  const userLeft = (ctx, data, ws) => {
+  const userLeft = (data) => {
     const username = data.data.username
     console.log(`User ${username} left.`)
     dispatch(
@@ -223,7 +222,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       )
     )
   }
-  const ownerLeft = (ctx, data, ws) => {
+  const ownerLeft = (data) => {
     const username = data.data.username
     console.log(`Owner ${username} left.`)
     // TODO: use info popup with two buttons (save, exit) and after reroute to CreateOrJoinWhiteboard.
@@ -239,97 +238,100 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   }
 
   const handleMouseDown = (event) => {
-    setIsDrawing(true);
+    setIsDrawing(true)
     setCurrentDrawing({
-      type: "DRAW",
-      color: "black",
+      type: typesDef.WHITEBOARD_DRAW,
+      color: 'black',
       size: 5,
       points: [{ x: event.nativeEvent.offsetX, y: event.nativeEvent.offsetY }],
-    });
-  };
+    })
+  }
 
   const handleMouseMove = (event) => {
-    if (!isDrawing) return;
-    const newPoint = { x: event.nativeEvent.offsetX, y: event.nativeEvent.offsetY };
+    if (!isDrawing) return
+    const newPoint = {
+      x: event.nativeEvent.offsetX,
+      y: event.nativeEvent.offsetY,
+    }
     setCurrentDrawing((prevState) => ({
       ...prevState,
       points: [...prevState.points, newPoint],
-    }));
-    draw(canvasRef.current.getContext("2d"), currentDrawing);
+    }))
+    draw(canvasRef.current.getContext('2d'), currentDrawing)
     const d = JSON.stringify(currentDrawing)
     console.log('send draw to ws')
     console.log(d)
-    websocket.send(d);
-  };
+    websocket.send(d)
+  }
 
   const handleMouseUp = () => {
-    setIsDrawing(false);
-    setDrawings((prevState) => [...prevState, currentDrawing]);
+    setIsDrawing(false)
+    setDrawings((prevState) => [...prevState, currentDrawing])
     setCurrentDrawing({
-      type: "DRAW",
-      color: "black",
+      type: typesDef.WHITEBOARD_DRAW,
+      color: 'black',
       size: 5,
       points: [],
-    });
-    setRedoDrawings([]);
-  };
+    })
+    setRedoDrawings([])
+  }
 
   const handleUndo = () => {
-    if (drawings.length === 0) return;
-    const lastDrawing = drawings[drawings.length - 1];
-    setDrawings((prevState) => prevState.slice(0, prevState.length - 1));
-    setRedoDrawings((prevState) => [...prevState, lastDrawing]);
-    const ctx = canvasRef.current.getContext("2d");
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    drawings.slice(0, drawings.length - 1).forEach((drawing) => draw(ctx, drawing));
-  };
+    if (drawings.length === 0) return
+    const lastDrawing = drawings[drawings.length - 1]
+    setDrawings((prevState) => prevState.slice(0, prevState.length - 1))
+    setRedoDrawings((prevState) => [...prevState, lastDrawing])
+    const ctx = canvasRef.current.getContext('2d')
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    drawings
+      .slice(0, drawings.length - 1)
+      .forEach((drawing) => draw(ctx, drawing))
+  }
 
   const handleRedo = () => {
-    if (redoDrawings.length === 0) return;
-    const lastRedoDrawing = redoDrawings[redoDrawings.length - 1];
-    setRedoDrawings((prevState) => prevState.slice(0, prevState.length - 1));
-    setDrawings((prevState) => [...prevState, lastRedoDrawing]);
-    draw(canvasRef.current.getContext("2d"), lastRedoDrawing);
-  };
+    if (redoDrawings.length === 0) return
+    const lastRedoDrawing = redoDrawings[redoDrawings.length - 1]
+    setRedoDrawings((prevState) => prevState.slice(0, prevState.length - 1))
+    setDrawings((prevState) => [...prevState, lastRedoDrawing])
+    draw(canvasRef.current.getContext('2d'), lastRedoDrawing)
+  }
 
   const handleClear = () => {
-    const ctx = canvasRef.current.getContext("2d");
-    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-    setDrawings([]);
-    setRedoDrawings([]);
-  };
-
-  
-
-
+    const ctx = canvasRef.current.getContext('2d')
+    ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
+    setDrawings([])
+    setRedoDrawings([])
+  }
 
   // THIS STILL NEED UPLOADING WITH WEBSOCKETS AND THE IMAGES ARE TOO BIG .Marco
   const handleFileChange = (event) => {
-    const file = event.target.files[0];
-    if (!file) return;
+    const file = event.target.files[0]
+    if (!file) return
 
-    const reader = new FileReader();
+    const reader = new FileReader()
     reader.onload = (e) => {
-      const img = new Image();
+      const img = new Image()
       img.onload = () => {
-        const canvas = canvasRef.current;
-        const canvasWidth = 1000;
-        const canvasHeight = 500; 
-        canvas.width = canvasWidth;
-        canvas.height = canvasHeight;
+        const canvas = canvasRef.current
+        const canvasWidth = 1000
+        const canvasHeight = 500
+        canvas.width = canvasWidth
+        canvas.height = canvasHeight
 
-        const scale = Math.min(canvasWidth / img.width, canvasHeight / img.height);
-        const x = (canvasWidth / 2) - (img.width / 2) * scale;
-        const y = (canvasHeight / 2) - (img.height / 2) * scale;
+        const scale = Math.min(
+          canvasWidth / img.width,
+          canvasHeight / img.height
+        )
+        const x = canvasWidth / 2 - (img.width / 2) * scale
+        const y = canvasHeight / 2 - (img.height / 2) * scale
 
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
-      };
-      img.src = e.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
-
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, x, y, img.width * scale, img.height * scale)
+      }
+      img.src = e.target.result
+    }
+    reader.readAsDataURL(file)
+  }
 
   const canvasStyle = {
     width: '1000px',
@@ -342,32 +344,32 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     left: 0,
     right: 0,
     margin: 'auto',
-  };
+  }
 
   const saveAsPNG = () => {
-    const canvas = canvasRef.current;
-    const link = document.createElement("a");
-    link.download = "whiteboard.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
-  };
+    const canvas = canvasRef.current
+    const link = document.createElement('a')
+    link.download = 'whiteboard.png'
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+  }
 
   return (
     <div>
       <canvas
-          ref={canvasRef}
-          style={canvasStyle}
-          onMouseDown={handleMouseDown}
-          onMouseMove={handleMouseMove}
-          onMouseUp={handleMouseUp}
-        />
-        <button onClick={handleUndo}>Undo</button>
-        <button onClick={handleRedo}>Redo</button>
-        <button onClick={handleClear}>Clear</button>
-        <button onClick={saveAsPNG}>Save</button>
-        <input type="file" accept="image/*" onChange={handleFileChange} />
+        ref={canvasRef}
+        style={canvasStyle}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+      />
+      <button onClick={handleUndo}>Undo</button>
+      <button onClick={handleRedo}>Redo</button>
+      <button onClick={handleClear}>Clear</button>
+      <button onClick={saveAsPNG}>Save</button>
+      <input type='file' accept='image/*' onChange={handleFileChange} />
     </div>
-  );
-};
+  )
+}
 
-  export default Whiteboard;
+export default Whiteboard
