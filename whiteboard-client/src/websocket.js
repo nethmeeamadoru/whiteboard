@@ -1,5 +1,5 @@
 const createWebSocket = () => {
-    const webSocketUrl = "ws://localhost:8000"; // replace with your own WebSocket server URL
+    const webSocketUrl = "wss://localhost:8000"; // replace
     const websocket = new WebSocket(webSocketUrl);
   
     websocket.onopen = () => {
