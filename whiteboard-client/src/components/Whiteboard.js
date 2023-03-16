@@ -83,7 +83,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       } else if (data.type === typesDef.ASK_TO_JOIN_ROOM) {
         // This asks from room owner if user x can be added
         console.log('ASK_TO_JOIN_ROOM')
-        askIfUserCanJoin(ctx, data, ws)
+        askIfUserCanJoin(data, ws)
       } else if (data.type === typesDef.ADD_USER_TO_ROOM) {
         // This is notification that user was added
         console.log('ADD_USER_TO_ROOM')
@@ -163,6 +163,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   }
 
   const askIfUserCanJoin = (data, ws) => {
+    console.log(data)
     const userId = data.data.userId
     const username = data.data.username
     confirmAlert({
