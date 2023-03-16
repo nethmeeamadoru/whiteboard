@@ -38,9 +38,6 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   useEffect(() => {
     const canvas = canvasRef.current
 
-    const ws = createWebSocket()
-    setWebsocket(ws)
-
     const resizeCanvas = () => {
       canvas.width = canvas.clientWidth
       canvas.height = canvas.clientHeight
@@ -50,14 +47,13 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     const ctx = canvas.getContext('2d')
     ctx.fillStyle = 'white'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
+    ctx.lineJoin = 'round'
+    ctx.lineCap = 'round'
+    //??? Undefined method
+    //setContext(ctx) // This must be after the fillStyle and fillRect
 
-    const drawPicture = (dataUrl) => {
-      const img = new Image()
-      img.onload = () => {
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
-      }
-      img.src = dataUrl
-    }
+    const ws = createWebSocket()
+    setWebsocket(ws)
 
     ws.onopen = () => {
       console.log('WebSocket connection established onopen')
@@ -92,7 +88,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
         draw(ctx, data)
       } else if (data.type === typesDef.WHITEBOARD_PICTURE) {
         console.log('WHITEBOARD_PICTURE')
-        drawPicture(data.payload)
+        //TODO
       } else if (data.type === typesDef.WHITEBOARD_UNDO) {
         console.log('WHITEBOARD_UNDO')
         //TODO
@@ -256,7 +252,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   }
 
   const saveImageAndExit = () => {
-    saveAsPNG()
+    handleSave()
     setWhiteBoardSessionId(null)
   }
 
@@ -404,14 +400,15 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     margin: 'auto',
   }
 
-  const saveAsPNG = () => {
+  const handleSave = () => {
     const canvas = canvasRef.current
-    const ctx = canvas.getContext('2d')
-    ctx.clearRect(0, 0, canvas.width, canvas.height) // clear the canvas
-    const link = document.createElement('a')
-    link.download = 'whiteboard.png'
-    link.href = canvas.toDataURL('image/png')
-    link.click()
+    const dataURL = canvas.toDataURL('image/png')
+    const downloadLink = document.createElement('a')
+    downloadLink.href = dataURL
+    downloadLink.download = 'whiteboard.png'
+    document.body.appendChild(downloadLink)
+    downloadLink.click()
+    document.body.removeChild(downloadLink)
   }
 
   return (
@@ -426,7 +423,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       <button onClick={handleUndo}>Undo</button>
       <button onClick={handleRedo}>Redo</button>
       <button onClick={handleClear}>Clear</button>
-      <button onClick={saveAsPNG}>Save</button>
+      <button onClick={handleSave}>Save</button>
       <input type='file' accept='image/*' onChange={handleFileChange} />
       <p>RoomId: {roomId}</p>
     </div>
