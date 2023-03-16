@@ -1,0 +1,16 @@
+.gitignore
+node_modules
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+/client/node_modules
+/server/node_modules
+
+#Disable logging in server when in prod  in server/config/logger.js
+
+if (process.env.NODE_ENV === 'production') {
+    logger.add(new winston.transports.Console({
+        level: 'error',
+        format: winston.format.simple()
+    }));
+}
