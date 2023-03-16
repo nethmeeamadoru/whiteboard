@@ -1,10 +1,10 @@
 FROM node:alpine
 
-WORKDIR /app
+WORKDIR /build
 
 COPY package.json ./
 COPY package-lock.json ./
-COPY --from=build /app/build
+COPY --from=build /build/build
 
 RUN npm install --production
 
