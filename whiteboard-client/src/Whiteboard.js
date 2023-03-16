@@ -89,6 +89,8 @@ const Whiteboard = () => {
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
     setDrawings([]);
     setRedoDrawings([]);
+    
+    websocket.send(JSON.stringify({ type: "CLEAR" }));
   };
 
   const handleFileChange = (event) => {
