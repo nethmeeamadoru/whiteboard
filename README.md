@@ -1,13 +1,6 @@
 # Whiteboard website with sockets
 
-## Contents OLD
-
-* Node.js server (for testing)
-- https://nodejs.org/en/
-- npm i socket.io
-- npm i express
-
-# Install
+# Install locally
 
 * server
   - reguires following from ./server/.env file:
@@ -16,17 +9,17 @@
     - PORT_WEBSOCKET=8000
     - JWT_SECRET=
   - npm run dev
-* client
+* whiteboard-client
+  - requires following from .whiteboard-client/.env file:
+    - REACT_APP_WEBSOCKET_URL=ws://localhost:8000
+    - Note: to update this value you need to restart react instance, aka rerun npm start
   - npm install
-    - react-canvas-draw might require -force or --legacy-peer-deps flag because it does not officially support react 18 but seems to work.
   - npm start
   - expect server to be on port 3003
-  - test user: user1, password: user1pass
+  - test account is user: user1, password: user1pass
 
 ## Deployment todo
 
-* Disable logging in server when in prod
-  * Or atleast modify logging so not all user info is logged (passwords!!!)
 * Get .env values for production
 * Make sure websocket is encrypted/tcp
 * Make doker image of this
