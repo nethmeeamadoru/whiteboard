@@ -14,11 +14,16 @@ const typesDef = {
   USER_LEFTH: 'userleft',
   OWNER_LEFT: 'ownerleft',
   WHITEBOARD_DRAW: 'DRAW',
+  WHITEBOARD_PICTURE: 'PICTURE',
+  WHITEBOARD_UNDO: 'UNDO',
+  WHITEBOARD_REDO: 'REDO',
+  WHITEBOARD_CLEAR: 'CLEAR',
 }
 
 const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   const canvasRef = useRef()
   const dispatch = useDispatch()
+  const [roomId, setRoomId] = useState(null)
   const [isDrawing, setIsDrawing] = useState(false)
   const [drawings, setDrawings] = useState([])
   const [currentDrawing, setCurrentDrawing] = useState({
@@ -33,6 +38,9 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   useEffect(() => {
     const canvas = canvasRef.current
 
+    const ws = createWebSocket()
+    setWebsocket(ws)
+
     const resizeCanvas = () => {
       canvas.width = canvas.clientWidth
       canvas.height = canvas.clientHeight
@@ -43,8 +51,13 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     ctx.fillStyle = 'white'
     ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    const ws = createWebSocket()
-    setWebsocket(ws)
+    const drawPicture = (dataUrl) => {
+      const img = new Image()
+      img.onload = () => {
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
+      }
+      img.src = dataUrl
+    }
 
     ws.onopen = () => {
       console.log('WebSocket connection established')
@@ -77,9 +90,21 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       if (data.type === typesDef.WHITEBOARD_DRAW) {
         console.log('WHITEBOARD_DRAW')
         draw(ctx, data)
+      } else if (data.type === typesDef.WHITEBOARD_PICTURE) {
+        console.log('WHITEBOARD_PICTURE')
+        drawPicture(data.payload)
+      } else if (data.type === typesDef.WHITEBOARD_UNDO) {
+        console.log('WHITEBOARD_UNDO')
+        //TODO
+      } else if (data.type === typesDef.WHITEBOARD_REDO) {
+        console.log('WHITEBOARD_REDO')
+        //TODO
+      } else if (data.type === typesDef.WHITEBOARD_CLEAR) {
+        console.log('WHITEBOARD_CLEAR')
+        clear()
       } else if (data.type === typesDef.CREATE_NEW_ROOM) {
         console.log('CREATE_NEW_ROOM')
-        newRoomCreated(data, ws)
+        newRoomCreated(data)
       } else if (data.type === typesDef.ASK_TO_JOIN_ROOM) {
         // This asks from room owner if user x can be added
         console.log('ASK_TO_JOIN_ROOM')
@@ -128,11 +153,10 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     ctx.stroke()
   }
 
-  const newRoomCreated = (data, ws) => {
+  const newRoomCreated = (data) => {
     const roomId = data.data.roomId
     console.log(`RoomId ${roomId}`)
-    console.log(ws)
-    //setWhiteBoardSessionId(roomId)
+    setRoomId(roomId)
     dispatch(
       setNotification(
         {
@@ -186,6 +210,11 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
 
   const userJoined = (data) => {
     const username = data.data.username
+
+    if (user && user.username === username) {
+      console.log(`You joined to room ${whiteboardSessionID}`)
+      setRoomId(whiteboardSessionID)
+    }
     console.log(`User ${username} joined.`)
     dispatch(
       setNotification(
@@ -197,6 +226,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       )
     )
   }
+
   const userRejected = () => {
     console.log('Request to join was rejected, or room does not exist.')
     dispatch(
@@ -210,6 +240,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     )
     setWhiteBoardSessionId(null)
   }
+
   const userLeft = (data) => {
     const username = data.data.username
     console.log(`User ${username} left.`)
@@ -223,6 +254,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       )
     )
   }
+
   const ownerLeft = (data) => {
     const username = data.data.username
     console.log(`Owner ${username} left.`)
@@ -259,10 +291,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       points: [...prevState.points, newPoint],
     }))
     draw(canvasRef.current.getContext('2d'), currentDrawing)
-    const d = JSON.stringify(currentDrawing)
-    console.log('send draw to ws')
-    console.log(d)
-    websocket.send(d)
+    websocket.send(JSON.stringify(currentDrawing))
   }
 
   const handleMouseUp = () => {
@@ -287,6 +316,8 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     drawings
       .slice(0, drawings.length - 1)
       .forEach((drawing) => draw(ctx, drawing))
+
+    websocket.send(JSON.stringify({ type: typesDef.WHITEBOARD_UNDO }))
   }
 
   const handleRedo = () => {
@@ -295,16 +326,22 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     setRedoDrawings((prevState) => prevState.slice(0, prevState.length - 1))
     setDrawings((prevState) => [...prevState, lastRedoDrawing])
     draw(canvasRef.current.getContext('2d'), lastRedoDrawing)
+
+    websocket.send(JSON.stringify({ type: typesDef.WHITEBOARD_REDO }))
   }
 
-  const handleClear = () => {
+  const clear = () => {
     const ctx = canvasRef.current.getContext('2d')
     ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height)
     setDrawings([])
     setRedoDrawings([])
   }
 
-  // THIS STILL NEED UPLOADING WITH WEBSOCKETS AND THE IMAGES ARE TOO BIG .Marco
+  const handleClear = () => {
+    clear()
+    websocket.send(JSON.stringify({ type: typesDef.WHITEBOARD_CLEAR }))
+  }
+
   const handleFileChange = (event) => {
     const file = event.target.files[0]
     if (!file) return
@@ -328,6 +365,15 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
 
         const ctx = canvas.getContext('2d')
         ctx.drawImage(img, x, y, img.width * scale, img.height * scale)
+
+        // Send the image data to the server
+        const data = canvas.toDataURL('image/png')
+        websocket.send(
+          JSON.stringify({
+            type: typesDef.WHITEBOARD_PICTURE,
+            data: data,
+          })
+        )
       }
       img.src = e.target.result
     }
@@ -349,6 +395,8 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
 
   const saveAsPNG = () => {
     const canvas = canvasRef.current
+    const ctx = canvas.getContext('2d')
+    ctx.clearRect(0, 0, canvas.width, canvas.height) // clear the canvas
     const link = document.createElement('a')
     link.download = 'whiteboard.png'
     link.href = canvas.toDataURL('image/png')
@@ -369,6 +417,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
       <button onClick={handleClear}>Clear</button>
       <button onClick={saveAsPNG}>Save</button>
       <input type='file' accept='image/*' onChange={handleFileChange} />
+      <p>RoomId: {roomId}</p>
     </div>
   )
 }

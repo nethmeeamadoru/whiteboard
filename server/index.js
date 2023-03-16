@@ -45,6 +45,10 @@ const typesDef = {
   USER_LEFTH: 'userleft',
   OWNER_LEFT: 'ownerleft',
   WHITEBOARD_DRAW: 'DRAW',
+  WHITEBOARD_PICTURE: 'PICTURE',
+  WHITEBOARD_UNDO: 'UNDO',
+  WHITEBOARD_REDO: 'REDO',
+  WHITEBOARD_CLEAR: 'CLEAR',
 }
 
 function broadcastMessageToRoom(json, roomId) {
@@ -130,8 +134,10 @@ function handleMessage(message, userId) {
         json.data = { username: userIdToUsername[userIdToJoin] }
         broadcastMessageToRoom(json, roomId)
 
+        // Send clear to newUser to make sure board is empty
+        broadcastMessageToUser({ type: typesDef.WHITEBOARD_CLEAR }, userIdToJoin)
+
         // Send all preexisting draw data to just joined user.
-        // TODO: send clear event first to the new user to make sure that whiteboard is empty.
         for (const jsonEvent of roomToEvents[roomId]) {
           broadcastMessageToUser(jsonEvent, userIdToJoin)
         }
@@ -140,10 +146,42 @@ function handleMessage(message, userId) {
       }
     }
     else if (dataFromClient.type === typesDef.WHITEBOARD_DRAW) {
-      console.log('Whiteboard event.')
+      console.log('Whiteboard DRAW event.')
 
       // Store events as they arrive to roomspecific array
       roomToEvents[roomId].push(dataFromClient)
+
+      broadcastMessageToRoom(dataFromClient, roomId)
+    }
+    else if (dataFromClient.type === typesDef.WHITEBOARD_PICTURE) {
+      console.log('Whiteboard PICTURE event.')
+
+      // Store events as they arrive to roomspecific array
+      roomToEvents[roomId].push(dataFromClient)
+
+      broadcastMessageToRoom(dataFromClient, roomId)
+    }
+    else if (dataFromClient.type === typesDef.WHITEBOARD_UNDO) {
+      console.log('Whiteboard UNDO event.')
+
+      // Store events as they arrive to roomspecific array
+      roomToEvents[roomId].push(dataFromClient)
+
+      broadcastMessageToRoom(dataFromClient, roomId)
+    }
+    else if (dataFromClient.type === typesDef.WHITEBOARD_REDO) {
+      console.log('Whiteboard REDO event.')
+
+      // Store events as they arrive to roomspecific array
+      roomToEvents[roomId].push(dataFromClient)
+
+      broadcastMessageToRoom(dataFromClient, roomId)
+    }
+    else if (dataFromClient.type === typesDef.WHITEBOARD_CLEAR) {
+      console.log('Whiteboard CLEAR event.')
+
+      // Store events as they arrive to roomspecific array
+      roomToEvents[roomId] = []
 
       broadcastMessageToRoom(dataFromClient, roomId)
     }
