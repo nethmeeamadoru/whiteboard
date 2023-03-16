@@ -46,7 +46,7 @@
       "last 1 safari version"
     ]
   },
-  "proxy": "http://localhost:3003",
+  "proxy": "https://localhost:3003",
   "devDependencies": {
     "eslint": "^8.36.0",
     "eslint-config-prettier": "^8.6.0",

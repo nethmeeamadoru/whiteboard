@@ -12,4 +12,4 @@ Content-Type: application/json
 #second user alex1 : passForAlex
 
 ### Get users
-GET http://localhost:3003/api/users
+GET https://localhost:3003/api/users

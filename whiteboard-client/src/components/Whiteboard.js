@@ -60,7 +60,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     }
 
     ws.onopen = () => {
-      console.log('WebSocket connection established')
+      console.log('WebSocket connection established onopen')
       // Need to send username to server.
       if (user.username) {
         if (whiteboardSessionID === 'newSession') {
@@ -255,19 +255,30 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     )
   }
 
+  const saveImageAndExit = () => {
+    saveAsPNG()
+    setWhiteBoardSessionId(null)
+  }
+
   const ownerLeft = (data) => {
     const username = data.data.username
     console.log(`Owner ${username} left.`)
-    // TODO: use info popup with two buttons (save, exit) and after reroute to CreateOrJoinWhiteboard.
-    dispatch(
-      setNotification(
+    confirmAlert({
+      title: 'Session ended',
+      message: `Owner ${username} left. Save session and/or exit.`,
+      buttons: [
         {
-          message: `Owner ${username} left. Save session and/or exit.`,
-          severity: 'error',
+          label: 'Save as image',
+          onClick: () => saveImageAndExit(),
         },
-        5
-      )
-    )
+        {
+          label: 'Exit',
+          onClick: () => setWhiteBoardSessionId(null),
+        },
+      ],
+      closeOnEscape: false,
+      closeOnClickOutside: false,
+    })
   }
 
   const handleMouseDown = (event) => {

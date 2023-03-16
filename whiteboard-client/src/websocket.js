@@ -1,6 +1,7 @@
 const createWebSocket = () => {
   const webSocketUrl =
-    process.env.REACT_APP_WEBSOCKET_URL || 'ws://localhost:8000' // replace with your own WebSocket server URL
+    process.env.REACT_APP_WEBSOCKET_URL || 'wss://localhost:3003'
+
   const websocket = new WebSocket(webSocketUrl)
 
   websocket.onopen = () => {

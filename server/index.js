@@ -1,25 +1,37 @@
-const http = require('http')
 const { WebSocket, WebSocketServer } = require('ws')
 const uuidv4 = require('uuid').v4
+const fs = require('fs')
 
 const app = require('./app')
 const config = require('./utils/config')
 const logger = require('./utils/logger')
 
-// Spinning up the http restapi server.
-const serverRest = http.createServer(app)
-serverRest.listen(config.PORT_REST, () => {
-  logger.info(`Http restapi server running on port ${config.PORT_REST}`)
-})
+let server = null
 
-// Spinning up the WebSocket server.
-const serverWSocket = http.createServer()
-const wsServer = new WebSocketServer({ server: serverWSocket })
-serverWSocket.listen(config.PORT_WEBSOCKET, () => {
-  console.log(`WebSocket server is running on port ${config.PORT_WEBSOCKET}`)
+// Spinning up the server.
+if (config.USE_HTTPS) {
+  const https = require('https')
+  const key = fs.readFileSync('./key-rsa.pem')
+  const cert = fs.readFileSync('./cert.pem')
+  server = https.createServer({ key, cert }, app) //, app
+} else {
+  const http = require('http')
+  server = http.createServer(app)
+}
+
+server.listen(config.PORT, () => {
+  if (config.USE_HTTPS) {
+    logger.info(`Https (SSL) server running on port ${config.PORT}`)
+  }
+  else {
+    logger.info(`Http server running on port ${config.PORT}`)
+  }
 })
 
 // Websoceket related events:
+
+// Spinning up the WebSocket.
+const wsServer = new WebSocketServer({ server })
 
 // Dict where key is userId and value is websocket connection.
 const userToClients = {}
@@ -80,6 +92,10 @@ function handleMessage(message, userId) {
   const json = { type: dataFromClient.type }
 
   let roomId = userToRoom[userId]
+
+  if (dataFromClient.type === 'PING') {
+    broadcastMessageToUser({ type: 'PING',  data: 'pong' }, userId)
+  }
 
   // If user does not belong to a room only certain operation are supposed to be possible:
   // For example create room and ask to join.
