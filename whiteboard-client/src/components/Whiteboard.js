@@ -344,12 +344,15 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     margin: 'auto',
   };
 
-  const saveAsPNG = () => {
+  const handleSave = () => {
     const canvas = canvasRef.current;
-    const link = document.createElement("a");
-    link.download = "whiteboard.png";
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    const dataURL = canvas.toDataURL('image/png');
+    const downloadLink = document.createElement('a');
+    downloadLink.href = dataURL;
+    downloadLink.download = 'whiteboard.png';
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
   };
 
   return (
