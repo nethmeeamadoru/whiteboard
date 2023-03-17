@@ -14,7 +14,7 @@
     - `npm run dev` or `npm start`
 * whiteboard-client
   - requires following from .whiteboard-client/.env file:
-    - REACT_APP_WEBSOCKET_URL=://localhost:3003
+    - REACT_APP_WEBSOCKET_URL=://localhost:3003/ws
     - REACT_APP_USE_HTTPS=0
       - If set to 1 requires certificate files in backend to set up https server
     - REACT_APP_WDS_SOCKET_HOST=0.0.0.0
