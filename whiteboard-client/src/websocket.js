@@ -1,21 +1,30 @@
 const createWebSocket = () => {
-    const webSocketUrl = "wss://localhost:8000"; // replace
-    const websocket = new WebSocket(webSocketUrl);
-  
-    websocket.onopen = () => {
-      console.log("WebSocket connection established");
-    };
-  
-    websocket.onerror = (error) => {
-      console.error("WebSocket error:", error);
-    };
-  
-    websocket.onclose = () => {
-      console.log("WebSocket connection closed");
-    };
-  
-    return websocket;
-  };
-  
-  export { createWebSocket };
-  
+  let webSocketUrl = ''
+  if (process.env.REACT_APP_USE_HTTPS === '1') {
+    webSocketUrl = `wss${
+      process.env.REACT_APP_WEBSOCKET_URL || '://localhost:3003'
+    }`
+  } else {
+    webSocketUrl = `ws${
+      process.env.REACT_APP_WEBSOCKET_URL || '://localhost:3003'
+    }`
+  }
+
+  const websocket = new WebSocket(webSocketUrl)
+
+  websocket.onopen = () => {
+    console.log('WebSocket connection established')
+  }
+
+  websocket.onerror = (error) => {
+    console.error('WebSocket error:', error)
+  }
+
+  websocket.onclose = () => {
+    console.log('WebSocket connection closed')
+  }
+
+  return websocket
+}
+
+export { createWebSocket }

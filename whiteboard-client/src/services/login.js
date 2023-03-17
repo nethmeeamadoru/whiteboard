@@ -31,9 +31,11 @@ const clearLocalStorage = () => {
   window.localStorage.removeItem(STORAGE_KEY)
 }
 
-export default {
+const exportObjects = {
   login,
   loadFromLocalStorage,
   saveToLocalStorage,
   clearLocalStorage,
 }
+
+export default exportObjects

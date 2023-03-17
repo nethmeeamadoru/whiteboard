@@ -1,5 +1,4 @@
-import React, { useState } from 'react' //useState, useRef
-//import { useSelector } from 'react-redux'
+import React, { useState } from 'react'
 
 // Need to pass user to Whiteborad, if useSelector is used here typeError happens.
 function CreateOrJoinWhiteboard({ user, setWhiteBoardSessionId }) {
@@ -19,26 +18,27 @@ function CreateOrJoinWhiteboard({ user, setWhiteBoardSessionId }) {
     setWhiteBoardSessionId(sessionID)
   }
 
+  const formInputStyle = { width: '250px', margin: '10px' }
+
   return (
     <div>
-      <h3>Create new session or ask to join pre-existing session</h3>
+      <h3>Create a new session:</h3>
       <div>
         <button onClick={createNewSession}>
           Create new whiteboard session
         </button>
       </div>
+      <h3>Or ask to join pre-existing session:</h3>
       <div>
         <form onSubmit={joinSession}>
-          <div>
-            whiteboard session id:
-            <input
-              value={sessionID}
-              onChange={(e) => setSessionId(e.target.value)}
-            />
-          </div>
-          <div>
-            <button type='Ask to join'>add</button>
-          </div>
+          whiteboard session id:
+          <input
+            type='text'
+            value={sessionID}
+            style={formInputStyle}
+            onChange={({ target }) => setSessionId(target.value)}
+          />
+          <button type='submit'>join</button>
         </form>
       </div>
     </div>

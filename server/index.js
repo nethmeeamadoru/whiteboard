@@ -1,25 +1,37 @@
-const http = require('http')
 const { WebSocket, WebSocketServer } = require('ws')
 const uuidv4 = require('uuid').v4
+const fs = require('fs')
 
 const app = require('./app')
 const config = require('./utils/config')
 const logger = require('./utils/logger')
 
-// Spinning up the http restapi server.
-const serverRest = http.createServer(app)
-serverRest.listen(config.PORT_REST, () => {
-  logger.info(`Http restapi server running on port ${config.PORT_REST}`)
-})
+let server = null
 
-// Spinning up the WebSocket server.
-const serverWSocket = http.createServer()
-const wsServer = new WebSocketServer({ server: serverWSocket })
-serverWSocket.listen(config.PORT_WEBSOCKET, () => {
-  console.log(`WebSocket server is running on port ${config.PORT_WEBSOCKET}`)
+// Spinning up the server.
+if (config.USE_HTTPS) {
+  const https = require('https')
+  const key = fs.readFileSync('./key-rsa.pem')
+  const cert = fs.readFileSync('./cert.pem')
+  server = https.createServer({ key, cert }, app) //, app
+} else {
+  const http = require('http')
+  server = http.createServer(app)
+}
+
+server.listen(config.PORT, () => {
+  if (config.USE_HTTPS) {
+    logger.info(`Https (SSL) server running on port ${config.PORT}`)
+  }
+  else {
+    logger.info(`Http server running on port ${config.PORT}`)
+  }
 })
 
 // Websoceket related events:
+
+// Spinning up the WebSocket.
+const wsServer = new WebSocketServer({ server })
 
 // Dict where key is userId and value is websocket connection.
 const userToClients = {}
@@ -45,6 +57,10 @@ const typesDef = {
   USER_LEFTH: 'userleft',
   OWNER_LEFT: 'ownerleft',
   WHITEBOARD_DRAW: 'DRAW',
+  WHITEBOARD_PICTURE: 'PICTURE',
+  WHITEBOARD_UNDO: 'UNDO',
+  WHITEBOARD_REDO: 'REDO',
+  WHITEBOARD_CLEAR: 'CLEAR',
 }
 
 function broadcastMessageToRoom(json, roomId) {
@@ -76,6 +92,10 @@ function handleMessage(message, userId) {
   const json = { type: dataFromClient.type }
 
   let roomId = userToRoom[userId]
+
+  if (dataFromClient.type === 'PING') {
+    broadcastMessageToUser({ type: 'PING',  data: 'pong' }, userId)
+  }
 
   // If user does not belong to a room only certain operation are supposed to be possible:
   // For example create room and ask to join.
@@ -130,8 +150,10 @@ function handleMessage(message, userId) {
         json.data = { username: userIdToUsername[userIdToJoin] }
         broadcastMessageToRoom(json, roomId)
 
+        // Send clear to newUser to make sure board is empty
+        broadcastMessageToUser({ type: typesDef.WHITEBOARD_CLEAR }, userIdToJoin)
+
         // Send all preexisting draw data to just joined user.
-        // TODO: send clear event first to the new user to make sure that whiteboard is empty.
         for (const jsonEvent of roomToEvents[roomId]) {
           broadcastMessageToUser(jsonEvent, userIdToJoin)
         }
@@ -140,10 +162,42 @@ function handleMessage(message, userId) {
       }
     }
     else if (dataFromClient.type === typesDef.WHITEBOARD_DRAW) {
-      console.log('Whiteboard event.')
+      console.log('Whiteboard DRAW event.')
 
       // Store events as they arrive to roomspecific array
       roomToEvents[roomId].push(dataFromClient)
+
+      broadcastMessageToRoom(dataFromClient, roomId)
+    }
+    else if (dataFromClient.type === typesDef.WHITEBOARD_PICTURE) {
+      console.log('Whiteboard PICTURE event.')
+
+      // Store events as they arrive to roomspecific array
+      roomToEvents[roomId].push(dataFromClient)
+
+      broadcastMessageToRoom(dataFromClient, roomId)
+    }
+    else if (dataFromClient.type === typesDef.WHITEBOARD_UNDO) {
+      console.log('Whiteboard UNDO event.')
+
+      // Store events as they arrive to roomspecific array
+      roomToEvents[roomId].push(dataFromClient)
+
+      broadcastMessageToRoom(dataFromClient, roomId)
+    }
+    else if (dataFromClient.type === typesDef.WHITEBOARD_REDO) {
+      console.log('Whiteboard REDO event.')
+
+      // Store events as they arrive to roomspecific array
+      roomToEvents[roomId].push(dataFromClient)
+
+      broadcastMessageToRoom(dataFromClient, roomId)
+    }
+    else if (dataFromClient.type === typesDef.WHITEBOARD_CLEAR) {
+      console.log('Whiteboard CLEAR event.')
+
+      // Store events as they arrive to roomspecific array
+      roomToEvents[roomId] = []
 
       broadcastMessageToRoom(dataFromClient, roomId)
     }
