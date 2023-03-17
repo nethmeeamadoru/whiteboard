@@ -43,8 +43,15 @@ Steps needed:
 8. Due to certs being self certified modern browser will not accept them and websocket conection will fail
   - Could either use something like lets certificate or to get these certs working open tab in `https://localhost:3003` and accept unsafe connection and connect which should cause that websocket connection should start working. Possible to do atleast in Chrome.
 
-## Deployment todo
+## Deployment
 
-* Get .env values for production
-* Make doker image of this
-* Deploy produced image
+- To run this using docker locally
+  1. .env files required on both client and server
+     - `REACT_APP_WEBSOCKET_URL` value might need to be modified
+  2. run command `docker compose up`
+  3. open [localhost tab on specified port](http://localhost:3003)
+
+### TODO:
+* Figure out how to get .env values to production
+* Figure out what to set `REACT_APP_WEBSOCKET_URL`? Should it be the website address?
+* How to deploy produced image

@@ -21,7 +21,6 @@ const typesDef = {
 }
 
 const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
-
   const canvasRef = useRef()
   // eslint-disable-next-line no-unused-vars
   const [context, setContext] = useState(null) //Where is context used.
@@ -59,6 +58,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
 
     ws.onopen = () => {
       console.log('WebSocket connection established onopen')
+      console.log(ws)
       // Need to send username to server.
       if (user.username) {
         if (whiteboardSessionID === 'newSession') {

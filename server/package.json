@@ -6,7 +6,9 @@
   "scripts": {
     "start": "node index.js",
     "dev": "nodemon index.js",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "build:ui": "cd ../whiteboard-client && npm run build && cp -r build ../server",
+    "clean": "rm -r ./build"
   },
   "author": "",
   "license": "ISC",

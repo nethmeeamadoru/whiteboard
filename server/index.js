@@ -31,7 +31,7 @@ server.listen(config.PORT, () => {
 // Websoceket related events:
 
 // Spinning up the WebSocket.
-const wsServer = new WebSocketServer({ server })
+const wsServer = new WebSocketServer({ server, path: '/ws' })
 
 // Dict where key is userId and value is websocket connection.
 const userToClients = {}

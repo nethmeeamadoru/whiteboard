@@ -1,15 +1,23 @@
 FROM node:alpine
 
-WORKDIR /build
+#Set workdir to app
+WORKDIR /app
 
-COPY package.json ./
-COPY package-lock.json ./
-COPY --from=build /build/build
+#Copy server and whiterboard-client, .dockerignore file skips node_modules folders.
+COPY server server
+COPY whiteboard-client whiteboard-client
 
-RUN npm install --production
+#Run npm install to client
+RUN cd ./whiteboard-client && npm install
 
-COPY . .
+#Switch folder back to server
+WORKDIR /app/server
 
-EXPOSE 3000
+#Run npm install in server and call package.json script to build client and copy produced build folder inside server
+RUN npm install && npm run build:ui
 
+#Expose port 3003
+EXPOSE 3003
+
+#Start node server
 CMD ["npm", "start"]
