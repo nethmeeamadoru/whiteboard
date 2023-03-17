@@ -21,6 +21,7 @@ const typesDef = {
 }
 
 const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
+
   const canvasRef = useRef()
   // eslint-disable-next-line no-unused-vars
   const [context, setContext] = useState(null) //Where is context used.
