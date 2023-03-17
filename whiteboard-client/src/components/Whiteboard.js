@@ -22,6 +22,8 @@ const typesDef = {
 
 const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   const canvasRef = useRef()
+  // eslint-disable-next-line no-unused-vars
+  const [context, setContext] = useState(null) //Where is context used.
   const dispatch = useDispatch()
   const [roomId, setRoomId] = useState(null)
   const [isDrawing, setIsDrawing] = useState(false)
@@ -49,8 +51,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     ctx.fillRect(0, 0, canvas.width, canvas.height)
     ctx.lineJoin = 'round'
     ctx.lineCap = 'round'
-    //??? Undefined method
-    //setContext(ctx) // This must be after the fillStyle and fillRect
+    setContext(ctx) // This must be after the fillStyle and fillRect
 
     const ws = createWebSocket()
     setWebsocket(ws)
