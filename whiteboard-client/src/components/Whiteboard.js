@@ -17,6 +17,7 @@ const typesDef = {
 
 const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
   const canvasRef = useRef();
+  const [context, setContext] = useState(null);
   const dispatch = useDispatch();
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawings, setDrawings] = useState([]);
