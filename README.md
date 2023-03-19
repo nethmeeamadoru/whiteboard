@@ -51,6 +51,8 @@ Steps needed:
   2. run command `docker compose up`
   3. open [localhost tab on specified port](http://localhost:3003)
 
+[Useful docker security tips.](https://snyk.io/blog/10-best-practices-to-containerize-nodejs-web-applications-with-docker/)
+
 ### TODO:
 * To publish to Gcp following would need to happen:
   1. Register domain

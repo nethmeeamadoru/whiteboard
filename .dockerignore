@@ -1,3 +1,6 @@
+.git
+npm-debug.log
+.npmrc
 **/.dockerignore
 **/Dockerfile
 **/.gitignore

@@ -8,21 +8,30 @@ FROM node:alpine AS build-stage-client
 #https://github.com/prettier/eslint-config-prettier/issues/211#issuecomment-962643528
 #ENV DISABLE_ESLINT_PLUGIN=true
 
+ENV NODE_ENV=production
+
+RUN apk update && apk add -q dumb-init
+
 WORKDIR /app
 
 COPY --chown=node:node whiteboard-client .
 
-RUN npm ci --omit=dev && npm run build
+RUN npm ci --only=production && npm run build
 
 #Create main image for server and copy build folder produced in client build stage
+#TODO: Specify very specific node version, https://snyk.io/blog/10-best-practices-to-containerize-nodejs-web-applications-with-docker/
 FROM node:alpine
+
+ENV NODE_ENV=production
 
 WORKDIR /app
 
 COPY --chown=node:node server .
 COPY --chown=node:node --from=build-stage-client /app/build ./build
 
-RUN npm ci --omit=dev
+COPY --from=build-stage-client /usr/bin/dumb-init /usr/bin/dumb-init
+
+RUN npm ci --only=production
 
 EXPOSE 3003
 
@@ -30,4 +39,4 @@ EXPOSE 3003
 USER node
 
 #Start node server
-CMD ["npm", "start"]
+CMD ["dumb-init", "node", "index.js"]
