@@ -1,2 +1,5 @@
+**/.dockerignore
+**/Dockerfile
 **/.gitignore
 **/node_modules
+**/build

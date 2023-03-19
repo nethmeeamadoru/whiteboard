@@ -1,23 +1,33 @@
-FROM node:alpine
+#Create build stage for client side
+FROM node:alpine AS build-stage-client
 
-#Set workdir to app
+#Either use following env variable or move eslint-config-prettier and eslint-plugin-prettier
+#from devDependencies to dependencies because otherwise production build will fail because
+#it does not install and thus find those plugins and part of build is running eslint which fails
+#due to missing packages as only dependency packages are installed...
+#https://github.com/prettier/eslint-config-prettier/issues/211#issuecomment-962643528
+#ENV DISABLE_ESLINT_PLUGIN=true
+
 WORKDIR /app
 
-#Copy server and whiterboard-client, .dockerignore file skips node_modules folders.
-COPY server server
-COPY whiteboard-client whiteboard-client
+COPY --chown=node:node whiteboard-client .
 
-#Run npm install to client
-RUN cd ./whiteboard-client && npm install
+RUN npm ci --omit=dev && npm run build
 
-#Switch folder back to server
-WORKDIR /app/server
+#Create main image for server and copy build folder produced in client build stage
+FROM node:alpine
 
-#Run npm install in server and call package.json script to build client and copy produced build folder inside server
-RUN npm install && npm run build:ui
+WORKDIR /app
 
-#Expose port 3003
+COPY --chown=node:node server .
+COPY --chown=node:node --from=build-stage-client /app/build ./build
+
+RUN npm ci --omit=dev
+
 EXPOSE 3003
+
+#Go from root user to node user (access rights)
+USER node
 
 #Start node server
 CMD ["npm", "start"]

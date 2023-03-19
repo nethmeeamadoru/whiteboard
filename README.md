@@ -52,6 +52,15 @@ Steps needed:
   3. open [localhost tab on specified port](http://localhost:3003)
 
 ### TODO:
-* Figure out how to get .env values to production
-* Figure out what to set `REACT_APP_WEBSOCKET_URL`? Should it be the website address?
-* How to deploy produced image
+* To publish to Gcp following would need to happen:
+  1. Register domain
+  2. Reserve static ip from Gcp and create project in Gcp
+     1. Map domain to this ip
+     2. Figure out if Gcp routing is needed
+  3. Figure out how to get cert for domain, either through Gcp or through some other (Let's encrypt)
+    * Effects on how to import cert files to server, on gcp might not need to copy cert files, only tell code where to import them. Others need to be 'manually' copied there.
+    * Let's encrypt support wildcard certs, Gcp does not
+  4. Change server to use produced certificate
+  5. Change `REACT_APP_WEBSOCKET_URL` to domain address
+  6. Implement Github action steps to build and publish container to Google Cloud run
+     * Get env values from Github secrets and use those in build

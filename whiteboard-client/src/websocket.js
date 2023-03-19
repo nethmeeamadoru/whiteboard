@@ -2,11 +2,11 @@ const createWebSocket = () => {
   let webSocketUrl = ''
   if (process.env.REACT_APP_USE_HTTPS === '1') {
     webSocketUrl = `wss${
-      process.env.REACT_APP_WEBSOCKET_URL || '://localhost:3003'
+      process.env.REACT_APP_WEBSOCKET_URL || '://localhost:3003/ws'
     }`
   } else {
     webSocketUrl = `ws${
-      process.env.REACT_APP_WEBSOCKET_URL || '://localhost:3003'
+      process.env.REACT_APP_WEBSOCKET_URL || '://localhost:3003/ws'
     }`
   }
 
