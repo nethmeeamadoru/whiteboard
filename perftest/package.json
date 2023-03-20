@@ -1,0 +1,17 @@
+{
+  "name": "perftest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Alex Savia",
+  "license": "ISC",
+  "dependencies": {
+    "bluebird": "^3.7.2",
+    "express": "^4.18.2",
+    "https": "^1.0.0",
+    "ws": "^8.13.0"
+  }
+}
