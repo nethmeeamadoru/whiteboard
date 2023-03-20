@@ -400,6 +400,7 @@ const Whiteboard = ({ user, whiteboardSessionID, setWhiteBoardSessionId }) => {
     left: 0,
     right: 0,
     margin: 'auto',
+    background-color: 'white'
   }
 
   const handleSave = () => {
