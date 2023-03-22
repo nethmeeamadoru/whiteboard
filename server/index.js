@@ -66,9 +66,9 @@ const typesDef = {
 function broadcastMessageToRoom(json, roomId) {
   // We are sending the current data to all connected clients in the room
   const data = JSON.stringify(json)
-  console.log('broadcastMessageToRoom')
-  console.log(roomId)
-  console.log(roomToUsers[roomId])
+  logger.info('broadcastMessageToRoom')
+  logger.info(roomId)
+  logger.info(roomToUsers[roomId])
   for (const userId of roomToUsers[roomId]) {
     const client = userToClients[userId]
     if (client.readyState === WebSocket.OPEN) {
@@ -79,7 +79,7 @@ function broadcastMessageToRoom(json, roomId) {
 
 function broadcastMessageToUser(json, userId) {
   // We are sending the current data to specific client in
-  console.log('broadcastMessageToUser')
+  logger.info('broadcastMessageToUser')
   const data = JSON.stringify(json)
   let client = userToClients[userId]
   if (client.readyState === WebSocket.OPEN) {
@@ -102,7 +102,7 @@ function handleMessage(message, userId) {
   if (!roomId) {
     if (dataFromClient.type === typesDef.CREATE_NEW_ROOM) {
       roomId = uuidv4()
-      console.log(`Creating new room ${roomId}`)
+      logger.info(`Creating new room ${roomId}`)
       roomToUsers[roomId] = [userId]
       userToRoom[userId] = roomId
       userIdToUsername[userId] = dataFromClient.username
@@ -114,29 +114,29 @@ function handleMessage(message, userId) {
       roomId = dataFromClient.roomId
       userIdToUsername[userId] = dataFromClient.username
       if (roomId && roomId in roomToUsers) {
-        console.log(`User ${userId} asking to join room ${roomId}`)
+        logger.info(`User ${userId} asking to join room ${roomId}`)
         const roomOwnerId = roomToUsers[roomId][0]
         json.data = { username: userIdToUsername[userId], userId: userId }
         broadcastMessageToUser(json, roomOwnerId)
       }
       else {
-        console.log(`User ${userId} asked to join nonexisting room ${roomId}`)
+        logger.info(`User ${userId} asked to join nonexisting room ${roomId}`)
         json.type = typesDef.REJECT_JOIN_TO_ROOM
         json.data = { }
         broadcastMessageToUser(json, userId)
       }
     }
     else {
-      console.log('Unknown event when user does not belong to any room')
-      console.log(userId)
-      console.log(dataFromClient)
+      logger.error('Unknown event when user does not belong to any room')
+      logger.error(userId)
+      logger.error(dataFromClient)
     }
   }
   // Following action require that user belongs to a room:
   else {
     if (dataFromClient.type === typesDef.REJECT_JOIN_TO_ROOM) {
       const rejectedUserId = dataFromClient.userId
-      console.log(`Roomowner ${userId} rejected user ${rejectedUserId}`)
+      logger.info(`Roomowner ${userId} rejected user ${rejectedUserId}`)
       json.data = { }
       broadcastMessageToUser(json, rejectedUserId)
     }
@@ -144,7 +144,7 @@ function handleMessage(message, userId) {
       const userIdToJoin = dataFromClient.userId
       // Only room owner can add other users
       if (userId === roomToUsers[roomId][0]) {
-        console.log(`Adding user ${userIdToJoin} to room ${roomId}`)
+        logger.info(`Adding user ${userIdToJoin} to room ${roomId}`)
         roomToUsers[roomId].push(userIdToJoin)
         userToRoom[userIdToJoin] = roomId
         json.data = { username: userIdToUsername[userIdToJoin] }
@@ -158,11 +158,11 @@ function handleMessage(message, userId) {
           broadcastMessageToUser(jsonEvent, userIdToJoin)
         }
       } else {
-        console.log('Error: Only room owner can add other users.')
+        logger.error('Error: Only room owner can add other users.')
       }
     }
     else if (dataFromClient.type === typesDef.WHITEBOARD_DRAW) {
-      console.log('Whiteboard DRAW event.')
+      logger.info('Whiteboard DRAW event.')
 
       // Store events as they arrive to roomspecific array
       roomToEvents[roomId].push(dataFromClient)
@@ -170,7 +170,7 @@ function handleMessage(message, userId) {
       broadcastMessageToRoom(dataFromClient, roomId)
     }
     else if (dataFromClient.type === typesDef.WHITEBOARD_PICTURE) {
-      console.log('Whiteboard PICTURE event.')
+      logger.info('Whiteboard PICTURE event.')
 
       // Store events as they arrive to roomspecific array
       roomToEvents[roomId].push(dataFromClient)
@@ -178,7 +178,7 @@ function handleMessage(message, userId) {
       broadcastMessageToRoom(dataFromClient, roomId)
     }
     else if (dataFromClient.type === typesDef.WHITEBOARD_UNDO) {
-      console.log('Whiteboard UNDO event.')
+      logger.info('Whiteboard UNDO event.')
 
       // Store events as they arrive to roomspecific array
       roomToEvents[roomId].push(dataFromClient)
@@ -186,7 +186,7 @@ function handleMessage(message, userId) {
       broadcastMessageToRoom(dataFromClient, roomId)
     }
     else if (dataFromClient.type === typesDef.WHITEBOARD_REDO) {
-      console.log('Whiteboard REDO event.')
+      logger.info('Whiteboard REDO event.')
 
       // Store events as they arrive to roomspecific array
       roomToEvents[roomId].push(dataFromClient)
@@ -194,7 +194,7 @@ function handleMessage(message, userId) {
       broadcastMessageToRoom(dataFromClient, roomId)
     }
     else if (dataFromClient.type === typesDef.WHITEBOARD_CLEAR) {
-      console.log('Whiteboard CLEAR event.')
+      logger.info('Whiteboard CLEAR event.')
 
       // Store events as they arrive to roomspecific array
       roomToEvents[roomId] = []
@@ -202,23 +202,23 @@ function handleMessage(message, userId) {
       broadcastMessageToRoom(dataFromClient, roomId)
     }
     else {
-      console.log('Unknown event when user belonged to a room')
-      console.log(userId)
-      console.log(dataFromClient)
+      logger.error('Unknown event when user belonged to a room')
+      logger.error(userId)
+      logger.error(dataFromClient)
     }
   }
 }
 
 function handleDisconnect(userId) {
-  console.log(`handleDisconnect ${userId}`)
+  logger.info(`handleDisconnect ${userId}`)
   const roomId = userToRoom[userId]
   const username = userIdToUsername[userId] || userId
 
   if (roomId && roomId in roomToUsers) {
     // Room owner left -> room must be destroyd
-    console.log(roomToUsers[roomId])
+    logger.info(roomToUsers[roomId])
     if (userId === roomToUsers[roomId][0]) {
-      console.log(`Roomowner ${userId} left ending room.`)
+      logger.info(`Roomowner ${userId} left ending room.`)
       const json = { type: typesDef.OWNER_LEFT }
 
       json.data = { username }
@@ -240,7 +240,7 @@ function handleDisconnect(userId) {
 
       // What to do with other room members:
       // 1. Terminate their connection as well
-      // 2. Remove roomid mappings to their userId
+      // 2. Remove roomid mappings to their userId <-- current implementation
       // 3. Do nothing to them
 
       for (const userIdToDelete of roomToUsers[roomId]) {
@@ -257,7 +257,7 @@ function handleDisconnect(userId) {
     }
     // Non roomowner left, remove that user.
     else {
-      console.log(`Normal user ${userId} disconnected.`)
+      logger.info(`Normal user ${userId} disconnected.`)
       const json = { type: typesDef.USER_LEFTH }
 
       json.data = { username }
@@ -278,7 +278,7 @@ function handleDisconnect(userId) {
   // After roomowner has left and that is done, other users are still left and need to be handled.
   // (Or user does not belong to any room, should not be possible thou)
   else {
-    console.log(`Normal user ${userId} disconnected after roomowner left.`)
+    logger.info(`Normal user ${userId} disconnected after roomowner left.`)
     delete userToClients[userId]
     delete userIdToUsername[userId]
     delete userToRoom[userId]
@@ -289,7 +289,7 @@ function handleDisconnect(userId) {
 wsServer.on('connection', function (connection) {
   // Generate a unique code for every user
   const userId = uuidv4()
-  console.log(`Recieved a new connection ${userId}`)
+  logger.info(`Recieved a new connection ${userId}`)
 
   // Store the new connection and handle messages
   userToClients[userId] = connection
